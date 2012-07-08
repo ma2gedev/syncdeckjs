@@ -80,6 +80,16 @@ io.on('connection', function(socket) {
     console.log("move");
     socket.broadcast.emit('move', data);
   });
+  socket.on('cursormove', function(data) {
+    if (!socket.handshake.session) {
+      return false;
+    }
+    if (!socket.handshake.session.admin) {
+      return false;
+    }
+    //console.log("cursormove: " + data);
+    socket.broadcast.emit('cursormove', data);
+  });
   socket.on('disconnect', function() {
     // do nothing
   });
