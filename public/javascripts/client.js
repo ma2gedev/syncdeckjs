@@ -1,4 +1,6 @@
 $(function() {
+  var pointerSync;
+
   // Deck initialization
   $.deck('.slide');
 
@@ -9,6 +11,7 @@ $(function() {
   $("#syncStatus").text(unsyncMessage);
   $("#syncStatus").click(function() {
     sync = !sync;
+    pointerSync.setSync(sync);
     $(this).text(sync ? unsyncMessage : syncMessage);
   });
 
@@ -28,4 +31,47 @@ $(function() {
       }
     }
   });
+
+  // pointer sync
+  pointerSync = new PointerSync({
+    socket: socket,
+    cursorId: '#pointersync-cursor',
+    getContentRectFn: function(isSend) {
+      var content = $('.deck-current');
+      var scale = 1;
+      if (isSend) {
+        scale = $('.deck-container').data('scale');
+      }
+      return { offset: content.offset(),
+               width: content.width() * scale,
+               height: content.height() * scale };
+    }
+  });
+  $(document).mousemove(function(e) { pointerSync.onMouseMove(e); });
+
+  // keep layout of content for pointer sync
+  $('.deck-container').width(1024);
+  $('.deck-container').height(768);
+  var onResize = function() {
+    var width = $(window).width();
+    var height = $(window).height();
+    var scale = Math.min(width / 1024, height / 768);
+    $('.deck-container').css({
+      'transform'        : 'scale(' + scale + ')',
+      '-webkit-transform': 'scale(' + scale + ')',
+      '-moz-transform'   : 'scale(' + scale + ')',
+      '-ms-transform'    : 'scale(' + scale + ')',
+      '-o-transform'     : 'scale(' + scale + ')'
+    });
+    $('.deck-container').css({
+      'transform-origin'        : '0 0',
+      '-webkit-transform-origin': '0 0',
+      '-moz-transform-origin'   : '0 0',
+      '-ms-transform-origin'    : '0 0',
+      '-o-transform-origin'     : '0 0'
+    });
+    $('.deck-container').data('scale', scale);
+  };
+  $(window).resize(onResize);
+  onResize();
 });
